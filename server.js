@@ -21,7 +21,7 @@ const PASS = "1234";  // パスワード
 app.post("/login", (req, res) => {
   if (req.body.user === USER && req.body.pass === PASS) {
     req.session.logged = true; // セッションにログイン情報を保存
-    res.redirect("/");
+    res.redirect("/?login=success"); // クエリパラメータを追加
   } else {
     res.status(401).send("Login failed"); // 401 Unauthorized
   }
