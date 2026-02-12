@@ -8,12 +8,11 @@ app.use(express.static("public"));
 
 // セッションの設定
 app.use(session({
-  secret: 'yourSecretKey', // 固定のシークレットキー
+  secret: 'yourSecretKey',
   resave: false,
   saveUninitialized: true
 }));
 
-// 簡単なログイン情報
 const USER = "admin"; // ユーザー名
 const PASS = "1234";  // パスワード
 
@@ -21,9 +20,9 @@ const PASS = "1234";  // パスワード
 app.post("/login", (req, res) => {
   if (req.body.user === USER && req.body.pass === PASS) {
     req.session.logged = true; // セッションにログイン情報を保存
-    res.redirect("/?login=success"); // クエリパラメータを追加
+    res.redirect("/?login=success");
   } else {
-    res.status(401).send("Login failed"); // 401 Unauthorized
+    res.status(401).send("Login failed");
   }
 });
 
@@ -32,7 +31,7 @@ app.get("/proxy", async (req, res) => {
   if (!req.session.logged) return res.redirect("/");
 
   const url = req.query.url;
-  if (!url) return res.status(400).send("No URL provided"); // 400 Bad Request
+  if (!url) return res.status(400).send("No URL provided");
 
   let target = url;
   if (!target.startsWith("http")) target = "https://" + target;
@@ -40,17 +39,23 @@ app.get("/proxy", async (req, res) => {
   try {
     const response = await fetch(target);
     const text = await response.text();
-    res.send(text);
+
+    // レスポンスのHTML内のリンクを変更する
+    const modifiedText = text.replace(/href="([^"]+)"/g, (match, p1) => {
+      return `href="/proxy?url=${encodeURIComponent(p1)}"`;
+    });
+
+    res.send(modifiedText);
   } catch (error) {
-    console.error("Proxy error:", error); // エラーログを出力
-    res.status(500).send("Error fetching the URL"); // 500 Internal Server Error
+    console.error("Proxy error:", error);
+    res.status(500).send("Error fetching the URL");
   }
 });
 
 // エラーハンドリング
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Something went wrong!'); // エラー処理
+  res.status(500).send('Something went wrong!');
 });
 
 // サーバーを起動
