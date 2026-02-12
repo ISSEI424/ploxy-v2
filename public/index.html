@@ -3,12 +3,61 @@
 <head>
 <meta charset="utf-8">
 <title>My Proxy</title>
+
+<style>
+body{
+ margin:0;
+ background:#0f0f0f;
+ height:100vh;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ font-family:sans-serif;
+ color:white;
+}
+
+.box{
+ width:500px;
+}
+
+input{
+ width:100%;
+ padding:15px;
+ border-radius:30px;
+ border:none;
+ outline:none;
+ font-size:16px;
+ background:#222;
+ color:white;
+}
+
+button{
+ margin-top:15px;
+ width:100%;
+ padding:12px;
+ border:none;
+ border-radius:30px;
+ background:#444;
+ color:white;
+ cursor:pointer;
+}
+</style>
 </head>
-<body style="background:#111;color:white;text-align:center">
 
-<h1>自分用プロキシ</h1>
+<body>
 
-<a href="/proxy">接続テスト</a>
+<div class="box">
+ <input id="url" placeholder="URLを入力">
+ <button onclick="go()">接続</button>
+</div>
+
+<script>
+function go(){
+ const u=document.getElementById("url").value;
+ if(!u)return;
+ location.href="/proxy";
+}
+</script>
 
 </body>
 </html>
