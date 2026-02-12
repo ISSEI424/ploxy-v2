@@ -1,49 +1,63 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<style>
-body {
-  margin: 0;
-  background: #0f0f0f;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: sans-serif;
-  color: white;
-}
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            background: #0f0f0f;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: sans-serif;
+            color: white;
+        }
 
-.box { width: 400px; }
+        .box {
+            width: 400px;
+        }
 
-input, button {
-  width: 100%;
-  padding: 12px;
-  margin-top: 10px;
-  border: none;
-  border-radius: 20px;
-  background: #222;
-  color: white;
-}
-</style>
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 20px;
+            background: #222;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-<div class="box">
-  <form action="/login" method="post">
-    <input name="user" placeholder="User" required>
-    <input name="pass" placeholder="Password" type="password" required>
-    <button>Login</button>
-  </form>
-  <hr>
-  <input id="url" placeholder="URL" required>
-  <button onclick="go()">Connect</button>
-</div>
+    <div class="box" id="loginBox">
+        <form action="/login" method="post">
+            <input name="user" placeholder="User" required>
+            <input name="pass" placeholder="Password" type="password" required>
+            <button>Login</button>
+        </form>
+    </div>
 
-<script>
-function go() {
-  const u = document.getElementById("url").value;
-  location.href = "/proxy?url=" + encodeURIComponent(u);
-}
-</script>
+    <div class="box" id="urlBox" style="display: none;">
+        <h3>ログイン成功！次に接続するURLを入力してください:</h3>
+        <input id="url" placeholder="URL" required>
+        <button onclick="go()">Connect</button>
+    </div>
+
+    <script>
+        function go() {
+            const u = document.getElementById("url").value;
+            location.href = "/proxy?url=" + encodeURIComponent(u);
+        }
+
+        // ログイン成功時にURLボックスを表示する
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('login') === 'success') {
+                document.getElementById("loginBox").style.display = "none";
+                document.getElementById("urlBox").style.display = "block";
+            }
+        };
+    </script>
 </body>
 </html>
