@@ -1,58 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 <meta charset="utf-8">
-
 <style>
-body{
- margin:0;
- background:#0f0f0f;
- height:100vh;
- display:flex;
- justify-content:center;
- align-items:center;
- font-family:sans-serif;
- color:white;
+body {
+  margin: 0;
+  background: #0f0f0f;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: sans-serif;
+  color: white;
 }
 
-.box{width:400px}
+.box { width: 400px; }
 
-input,button{
- width:100%;
- padding:12px;
- margin-top:10px;
- border:none;
- border-radius:20px;
- background:#222;
- color:white;
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 20px;
+  background: #222;
+  color: white;
 }
 </style>
-
 </head>
-
 <body>
-
 <div class="box">
-
-<form action="/login" method="post">
-<input name="user" placeholder="user">
-<input name="pass" placeholder="password" type="password">
-<button>login</button>
-</form>
-
-<hr>
-
-<input id="url" placeholder="URL">
-<button onclick="go()">接続</button>
-
+  <form action="/login" method="post">
+    <input name="user" placeholder="User" required>
+    <input name="pass" placeholder="Password" type="password" required>
+    <button>Login</button>
+  </form>
+  <hr>
+  <input id="url" placeholder="URL" required>
+  <button onclick="go()">Connect</button>
 </div>
 
 <script>
-function go(){
- const u=document.getElementById("url").value;
- location.href="/proxy?url="+encodeURIComponent(u);
+function go() {
+  const u = document.getElementById("url").value;
+  location.href = "/proxy?url=" + encodeURIComponent(u);
 }
 </script>
-
 </body>
 </html>
