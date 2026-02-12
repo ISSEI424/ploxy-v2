@@ -38,12 +38,21 @@ app.get("/proxy", async (req, res) => {
 
   try {
     const response = await fetch(target);
-    const text = await response.text();
+    let text = await response.text();
 
-    // HTMLでBaseタグを追加して外部リンクをプロキシ経由に
-    const modifiedText = text.replace(/<head>/, `<head><base href="${target}">`);
+    // リンクをプロキシ経由に書き換える
+    text = text.replace(/href=["']([^"']+)["']/g, (match, p1) => {
+      const newUrl = p1.startsWith('http') ? p1 : (new URL(p1, target)).href; // 絶対URLまたは相対URL処理
+      return `href="/proxy?url=${encodeURIComponent(newUrl)}"`;
+    });
 
-    res.send(modifiedText);
+    // スクリプトsrc属性もプロキシ経由に変更
+    text = text.replace(/src=["']([^"']+)["']/g, (match, p1) => {
+      const newUrl = p1.startsWith('http') ? p1 : (new URL(p1, target)).href;
+      return `src="/proxy?url=${encodeURIComponent(newUrl)}"`;
+    });
+
+    res.send(text);
   } catch (error) {
     console.error("Proxy error:", error);
     res.status(500).send("Error fetching the URL");
