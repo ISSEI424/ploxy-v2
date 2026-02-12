@@ -8,7 +8,7 @@ app.use(express.static("public"));
 
 // セッションの設定
 app.use(session({
-  secret: 'yourSecretKey',  // 固定のシークレットキー
+  secret: 'yourSecretKey', // 固定のシークレットキー
   resave: false,
   saveUninitialized: true
 }));
