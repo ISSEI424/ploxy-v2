@@ -42,7 +42,18 @@ app.get("/proxy", async (req, res) => {
 
     // レスポンスのHTML内のリンクを変更する
     const modifiedText = text.replace(/href="([^"]+)"/g, (match, p1) => {
-      return `href="/proxy?url=${encodeURIComponent(p1)}"`;
+      let newUrl = p1;
+      
+      // 絶対URLの場合
+      if (newUrl.startsWith('http')) {
+        newUrl = `/proxy?url=${encodeURIComponent(newUrl)}`;
+      }
+      // 相対URLの場合
+      else {
+        newUrl = `/proxy?url=${encodeURIComponent(new URL(newUrl, target).href)}`;
+      }
+      
+      return `href="${newUrl}"`;
     });
 
     res.send(modifiedText);
