@@ -8,7 +8,7 @@
             background: #0f0f0f;
             height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             font-family: sans-serif;
             color: white;
@@ -30,7 +30,7 @@
 <body>
     <div class="box" id="loginBox">
         <form action="/login" method="post">
-            <input name="user" placeholder="Username" required> <!-- プレースホルダーを変更 -->
+            <input name="user" placeholder="Username" required>
             <input name="pass" placeholder="Password" type="password" required>
             <button>Login</button>
         </form>
@@ -45,11 +45,25 @@
             const u = document.getElementById("url").value;
             location.href = "/proxy?url=" + encodeURIComponent(u);
         }
+        
+        // リンクをプロキシを通してリダイレクトする
+        function modifyLinks() {
+            const links = document.querySelectorAll('a');
+            links.forEach(link => {
+                const originalHref = link.href;
+                link.href = "/proxy?url=" + encodeURIComponent(originalHref);
+                link.target = "_self"; // 同じタブで開くようにする
+            });
+        }
+
         window.onload = function() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('login') === 'success') {
                 document.getElementById("loginBox").style.display = "none";
                 document.getElementById("urlBox").style.display = "block";
+            } else if (params.get('url')) {
+                // URLを表示して、リンクを修正する
+                modifyLinks();
             }
         };
     </script>
