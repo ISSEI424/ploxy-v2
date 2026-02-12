@@ -54,8 +54,7 @@ button{
 <script>
 function go(){
  const u=document.getElementById("url").value;
- if(!u)return;
- location.href="/proxy";
+ location.href="/proxy?url="+encodeURIComponent(u);
 }
 </script>
 
