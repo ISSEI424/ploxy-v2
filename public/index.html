@@ -13,11 +13,9 @@
             font-family: sans-serif;
             color: white;
         }
-
         .box {
             width: 400px;
         }
-
         input, button {
             width: 100%;
             padding: 12px;
@@ -37,20 +35,16 @@
             <button>Login</button>
         </form>
     </div>
-
     <div class="box" id="urlBox" style="display: none;">
         <h3>ログイン成功！次に接続するURLを入力してください:</h3>
         <input id="url" placeholder="URL" required>
         <button onclick="go()">Connect</button>
     </div>
-
     <script>
         function go() {
             const u = document.getElementById("url").value;
             location.href = "/proxy?url=" + encodeURIComponent(u);
         }
-
-        // ログイン成功時にURLボックスを表示する
         window.onload = function() {
             const params = new URLSearchParams(window.location.search);
             if (params.get('login') === 'success') {
