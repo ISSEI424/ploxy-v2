@@ -2,70 +2,162 @@
 <html lang="ja">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Proxy Login</title>
     <style>
+        :root{
+            --bg:#0f0f0f;
+            --card:#111;
+            --input:#222;
+            --accent:#2a8;
+            --text:#fff;
+            --radius:20px;
+        }
+        html,body{height:100%}
         body {
             margin: 0;
-            background: #0f0f0f;
+            background: var(--bg);
             height: 100vh;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            font-family: sans-serif;
-            color: white;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            color: var(--text);
+            padding: 16px;
+            box-sizing: border-box;
         }
-        .box {
-            width: 400px;
-        }
-        input, button {
+        .card {
             width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 20px;
-            background: #222;
-            color: white;
+            max-width: 460px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+            box-sizing: border-box;
         }
+        h3{margin:0 0 8px 0;font-weight:600}
+        form > * + * {margin-top:10px}
+        input[type="text"], input[type="password"], input[type="url"], button {
+            width: 100%;
+            padding: 12px 14px;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--input);
+            color: var(--text);
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        input::placeholder{color:#9a9a9a}
+        button {
+            cursor: pointer;
+            font-weight: 600;
+            background: linear-gradient(90deg,#333,#222);
+        }
+        button[disabled]{opacity:0.6;cursor:default}
+        .small {font-size:13px;color:#bdbdbd;margin-top:8px}
+        .hidden{display:none}
     </style>
 </head>
 <body>
-    <div class="box" id="loginBox">
-        <form action="/login" method="post">
-            <input name="user" placeholder="Username" required>
-            <input name="pass" placeholder="Password" type="password" required>
-            <button>Login</button>
+    <div class="card" id="loginCard">
+        <form id="loginForm" action="/login" method="post" autocomplete="off" novalidate>
+            <h3>ログイン</h3>
+            <input name="user" id="user" type="text" placeholder="Username" required autocomplete="username" />
+            <input name="pass" id="pass" type="password" placeholder="Password" required autocomplete="current-password" />
+            <!-- サーバ側で発行したcsrfトークンがあればここに埋める -->
+            <!-- <input type="hidden" name="csrf" value="<!-- CSRF_TOKEN -->" /> -->
+            <button type="submit" id="loginBtn">Login</button>
+            <div class="small">※パスワードはサーバ側で安全に扱われる前提です。</div>
         </form>
+
+        <div id="urlSection" class="hidden" style="margin-top:18px;">
+            <h3>接続先URL</h3>
+            <input id="urlInput" type="url" placeholder="https://example.com" />
+            <button id="connectBtn" type="button">Connect</button>
+            <div class="small">外部リンクはプロキシ経由で開かれます。mailto:やjavascript:は除外されます。</div>
+        </div>
     </div>
-    <div class="box" id="urlBox" style="display: none;">
-        <h3>ログイン成功！次に接続するURLを入力してください:</h3>
-        <input id="url" placeholder="URL" required>
-        <button onclick="go()">Connect</button>
-    </div>
+
     <script>
-        function go() {
-            const u = document.getElementById("url").value;
-            location.href = "/proxy?url=" + encodeURIComponent(u);
-        }
-        
-        // リンクをプロキシを通してリダイレクトする
-        function modifyLinks() {
-            const links = document.querySelectorAll('a');
-            links.forEach(link => {
-                const originalHref = link.href;
-                link.href = "/proxy?url=" + encodeURIComponent(originalHref);
-                link.target = "_self"; // 同じタブで開くようにする
-            });
+    (function(){
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const urlSection = document.getElementById('urlSection');
+        const urlInput = document.getElementById('urlInput');
+        const connectBtn = document.getElementById('connectBtn');
+
+        // フォーカス
+        document.getElementById('user').focus();
+
+        // 二重送信防止
+        loginForm.addEventListener('submit', function(e){
+            loginBtn.disabled = true;
+        });
+
+        // Connect ボタン挙動（クライアント側の簡易バリデーション）
+        connectBtn.addEventListener('click', function(){
+            const raw = urlInput.value.trim();
+            if(!raw){
+                urlInput.focus();
+                return;
+            }
+            try {
+                const u = new URL(raw);
+                // ブロックするスキーム
+                const blocked = ['javascript:', 'data:', 'file:', 'mailto:', 'tel:'];
+                if(blocked.some(s => u.protocol === s)) {
+                    alert('指定されたスキームはサポートされていません。');
+                    return;
+                }
+                // 最低限の長さチェック
+                if(u.href.length > 2000) {
+                    alert('URLが長すぎます。');
+                    return;
+                }
+                // プロキシ経由で遷移
+                const proxyUrl = '/proxy?url=' + encodeURIComponent(u.href);
+                location.href = proxyUrl;
+            } catch (err) {
+                alert('有効なURLを入力してください（例: https://example.com）');
+                urlInput.focus();
+            }
+        });
+
+        // URLパラメータで login=success を受け取ったら表示
+        const params = new URLSearchParams(location.search);
+        if(params.get('login') === 'success'){
+            // ログイン成功後の表示へ切り替え
+            document.getElementById('loginCard').querySelector('form').classList.add('hidden');
+            urlSection.classList.remove('hidden');
+            urlInput.focus();
+        } else if(params.get('url')){
+            // ページ内のリンクを書き換え（簡潔／安全に）
+            modifyLinks();
         }
 
-        window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('login') === 'success') {
-                document.getElementById("loginBox").style.display = "none";
-                document.getElementById("urlBox").style.display = "block";
-            } else if (params.get('url')) {
-                // URLを表示して、リンクを修正する
-                modifyLinks();
+        // ページ内のリンクをプロキシ経由に変換（mailto/tel/jsは除外）
+        function modifyLinks(){
+            const links = Array.from(document.querySelectorAll('a[href]'));
+            const blockedSchemes = ['mailto:', 'tel:', 'javascript:', 'data:', 'file:'];
+            for(const a of links){
+                try {
+                    const href = a.getAttribute('href');
+                    // 相対リンクは location.origin ベースで解決
+                    const resolved = new URL(href, location.href);
+                    if(blockedSchemes.some(s => resolved.protocol === s)) continue;
+                    // 同一ページ内アンカーはそのまま
+                    if(resolved.origin === location.origin && resolved.pathname === location.pathname && resolved.hash) continue;
+                    const prox = '/proxy?url=' + encodeURIComponent(resolved.href);
+                    a.setAttribute('href', prox);
+                    a.setAttribute('target', '_self');
+                    a.setAttribute('rel', 'noopener noreferrer');
+                } catch (e) {
+                    // 不正なリンクは無視
+                    continue;
+                }
             }
-        };
+        }
+    })();
     </script>
 </body>
 </html>
