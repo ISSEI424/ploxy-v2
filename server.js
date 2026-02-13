@@ -2,7 +2,7 @@ const express = require('express');
 const fetch = require('node-fetch');
 const session = require('express-session');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
@@ -63,3 +63,4 @@ app.get('/proxy', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`サーバーがポート ${PORT} で実行中`);
 });
+
