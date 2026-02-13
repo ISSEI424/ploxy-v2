@@ -52,6 +52,12 @@ app.get("/proxy", async (req, res) => {
       return `src="/proxy?url=${encodeURIComponent(newUrl)}"`;
     });
 
+    // 画像src属性もプロキシ経由に変更
+    text = text.replace(/src=["']([^"']+)["']/g, (match, p1) => {
+      const newUrl = p1.startsWith('http') ? p1 : (new URL(p1, target)).href;
+      return `src="/proxy?url=${encodeURIComponent(newUrl)}"`;
+    });
+
     res.send(text);
   } catch (error) {
     console.error("Proxy error:", error);
