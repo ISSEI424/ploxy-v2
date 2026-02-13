@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Renderは自動的にPORTを設定します
 
 // 静的ファイルを提供
 app.use(express.static(path.join(__dirname, 'public')));
@@ -17,14 +17,7 @@ app.get('/proxy', async (req, res) => {
   }
 
   try {
-    const response = await fetch(targetUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Custom Proxy',
-        // 必要に応じて他のヘッダーを追加できます
-      },
-    });
-
+    const response = await fetch(targetUrl);
     const contentType = response.headers.get('content-type');
     res.set('Content-Type', contentType);
     const data = await response.text();
