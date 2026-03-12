@@ -1,66 +1,47 @@
-const express = require('express');
-const fetch = require('node-fetch');
-const session = require('express-session');
-const app = express();
-const PORT = process.env.PORT || 3001;
+// GeForce NOW向けに軽量・依存なしで動作するように最適化
+(function(){
+  'use strict';
 
-app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
+  var form = document.getElementById('searchForm');
+  var input = document.getElementById('urlInput');
 
-// セッション設定
-app.use(session({
-  secret: 'secret_key',
-  resave: false,
-  saveUninitialized: true
-}));
-
-// ログイン情報
-const users = {
-  user: 'password123'  // ユーザー名: user, パスワード: password123
-};
-
-// ログインページ
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
-});
-
-// ログイン処理
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  if (users[username] && users[username] === password) {
-    req.session.authenticated = true;
-    res.redirect('/'); // ログイン成功後は同じページにリダイレクト
-  } else {
-    res.send('認証情報が間違っています。');
-  }
-});
-
-// プロキシエンドポイント
-app.get('/proxy', async (req, res) => {
-  if (!req.session.authenticated) {
-    return res.status(401).send('ログインが必要です');
-  }
-  
-  const targetUrl = req.query.url;
-  
-  if (!targetUrl) {
-    return res.status(400).send('URLが必要です');
+  // 高速なURL正規化：スキーマがなければ https を追加
+  function normalizeUrl(value){
+    if(!value) return '';
+    value = value.trim();
+    // 既にスキーマがあるかチェック
+    if(!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(value)){
+      value = 'https://' + value;
+    }
+    try {
+      // URL コンストラクタで最低限の検証
+      return new URL(value).href;
+    } catch (e) {
+      return '';
+    }
   }
 
-  try {
-    const response = await fetch(targetUrl);
-    const contentType = response.headers.get('content-type');
-    res.set('Content-Type', contentType);
-    const data = await response.text();
-    res.send(data);
-  } catch (error) {
-    console.error('エラー:', error);
-    res.status(500).send('URLの取得に失敗しました');
+  // フォーム送信処理：viewer.html にクエリで target を渡して遷移
+  function onSubmit(e){
+    e && e.preventDefault();
+    var raw = input.value || '';
+    var url = normalizeUrl(raw);
+    if(!url){
+      // シンプルなフォールバックエラー表示（GeForce NOW の制約を考慮）
+      try { alert('有効なURLを入力してください'); }
+      catch (ex) { /* ignore */ }
+      return;
+    }
+    // 規模を小さくするため相対パスで遷移（viewer.html は同一フォルダに置く）
+    location.href = './viewer.html?target=' + encodeURIComponent(url);
   }
-});
 
-// サーバーの起動
-app.listen(PORT, () => {
-  console.log(`サーバーがポート ${PORT} で実行中`);
-});
+  // Enter 抑制と submit の安定化
+  form.addEventListener('submit', onSubmit, false);
+  input.addEventListener('keydown', function(ev){
+    if(ev.key === 'Enter'){ ev.preventDefault(); onSubmit(); }
+  }, false);
 
+  // パフォーマンス小技：不要なレンダーブロッキングを避けるため
+  // イベントリスナは必要最小限に留める
+})();
